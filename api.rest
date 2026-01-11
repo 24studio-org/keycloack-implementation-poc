@@ -1,0 +1,206 @@
+### Belmonte IAM - Keycloak REST API Tests
+### Use VS Code REST Client extension to run these requests
+
+@baseUrl = http://localhost:8080
+@realm = belmonte-demo
+
+### ============================================
+### TOKEN ENDPOINTS
+### ============================================
+
+### Get Token - Admin User (Full Access)
+# @name adminLogin
+POST {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=admin-spa&username=admin&password=admin123
+
+###
+
+### Get Token - Cashier User (POS + View Inventory)
+# @name cashierLogin
+POST {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=admin-spa&username=cashier&password=cashier123
+
+###
+
+### Get Token - Warehouse User (Inventory Only)
+# @name warehouseLogin
+POST {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=admin-spa&username=warehouse&password=warehouse123
+
+###
+
+### Get Token - Customer User (Storefront)
+# @name customerLogin
+POST {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=ecommerce-spa&username=customer&password=customer123
+
+###
+
+### ============================================
+### USE TOKENS FROM ABOVE REQUESTS
+### ============================================
+
+@adminToken = {{adminLogin.response.body.access_token}}
+@cashierToken = {{cashierLogin.response.body.access_token}}
+@warehouseToken = {{warehouseLogin.response.body.access_token}}
+@customerToken = {{customerLogin.response.body.access_token}}
+
+### ============================================
+### USERINFO ENDPOINT (Verify Token Claims)
+### ============================================
+
+### Get Admin User Info
+GET {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/userinfo
+Authorization: Bearer {{adminToken}}
+
+###
+
+### Get Cashier User Info
+GET {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/userinfo
+Authorization: Bearer {{cashierToken}}
+
+###
+
+### Get Warehouse User Info
+GET {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/userinfo
+Authorization: Bearer {{warehouseToken}}
+
+###
+
+### Get Customer User Info
+GET {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/userinfo
+Authorization: Bearer {{customerToken}}
+
+###
+
+### ============================================
+### TOKEN INTROSPECTION
+### ============================================
+
+### Introspect Admin Token (requires client credentials)
+# Note: This needs a confidential client - for demo, use userinfo instead
+
+### ============================================
+### REFRESH TOKEN
+### ============================================
+
+### Refresh Admin Token
+# @name refreshAdmin
+POST {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&client_id=admin-spa&refresh_token={{adminLogin.response.body.refresh_token}}
+
+###
+
+### ============================================
+### LOGOUT
+### ============================================
+
+### Logout Admin User
+POST {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/logout
+Content-Type: application/x-www-form-urlencoded
+
+client_id=admin-spa&refresh_token={{adminLogin.response.body.refresh_token}}
+
+###
+
+### ============================================
+### OPENID CONFIGURATION (Discovery)
+### ============================================
+
+### Get OpenID Configuration
+GET {{baseUrl}}/realms/{{realm}}/.well-known/openid-configuration
+
+###
+
+### Get JWKS (Public Keys for Token Verification)
+GET {{baseUrl}}/realms/{{realm}}/protocol/openid-connect/certs
+
+###
+
+### ============================================
+### EXAMPLE API CALLS (To Your Backend)
+### Replace localhost:3001 with your API URL
+### ============================================
+
+@apiUrl = http://localhost:3001
+
+### Inventory - View (Warehouse, Cashier, Admin can access)
+GET {{apiUrl}}/api/inventory
+Authorization: Bearer {{warehouseToken}}
+
+###
+
+### Inventory - Adjust (Warehouse, Admin can access)
+POST {{apiUrl}}/api/inventory/adjust
+Authorization: Bearer {{warehouseToken}}
+Content-Type: application/json
+
+{
+  "productId": "prod-001",
+  "adjustment": 10,
+  "reason": "Received shipment"
+}
+
+###
+
+### POS - Sale (Cashier, Admin can access)
+POST {{apiUrl}}/api/pos/sale
+Authorization: Bearer {{cashierToken}}
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": "prod-001", "quantity": 2, "price": 29.99 }
+  ],
+  "paymentMethod": "card"
+}
+
+###
+
+### Admin - Manage Users (Admin only)
+GET {{apiUrl}}/api/admin/users
+Authorization: Bearer {{adminToken}}
+
+###
+
+### ============================================
+### TOKEN PAYLOAD DECODER (Copy token here to decode)
+### ============================================
+
+### To decode a JWT token manually:
+### 1. Run one of the login requests above
+### 2. Copy the access_token value
+### 3. Go to https://jwt.io and paste it
+### Or use: echo "<token>" | cut -d'.' -f2 | base64 -d | jq .
+
+### ============================================
+### EXPECTED TOKEN CLAIMS
+### ============================================
+
+### Admin Token should have:
+### - aud: "api-service"
+### - roles: ["inventory:view", "inventory:adjust", "inventory:transfer", 
+###           "pos:sale", "pos:return", "pos:cash-drawer",
+###           "admin:manage-users", "admin:manage-pricing"]
+
+### Cashier Token should have:
+### - aud: "api-service"  
+### - roles: ["pos:sale", "pos:return", "inventory:view"]
+
+### Warehouse Token should have:
+### - aud: "api-service"
+### - roles: ["inventory:view", "inventory:adjust", "inventory:transfer"]
+
+### Customer Token should have:
+### - aud: "api-service"
+### - roles: [] (empty - no special roles)

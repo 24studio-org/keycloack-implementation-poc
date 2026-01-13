@@ -26,6 +26,16 @@ export default function Home() {
               Create Account
             </Button>
           </Link>
+          <Link href="/roles/create">
+            <Button size="lg" variant="outline" className="min-w-[200px]">
+              Create Role
+            </Button>
+          </Link>
+          <Link href="/roles/assign">
+            <Button size="lg" variant="outline" className="min-w-[200px]">
+              Assign Role
+            </Button>
+          </Link>
         </div>
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl">

@@ -6,7 +6,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { KeycloackService } from './keycloack.service';
-import { LoginDto, RegisterDto } from './dto';
+import { LoginDto, RegisterDto, CreateRoleDto, AssignRoleDto } from './dto';
 
 @Controller('keycloack')
 export class KeycloackController {
@@ -22,5 +22,17 @@ export class KeycloackController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async register(@Body() registerDto: RegisterDto) {
     return this.keycloackService.register(registerDto);
+  }
+
+  @Post('roles')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async createRole(@Body() createRoleDto: CreateRoleDto) {
+    return this.keycloackService.createRole(createRoleDto);
+  }
+
+  @Post('roles/assign')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async assignRole(@Body() assignRoleDto: AssignRoleDto) {
+    return this.keycloackService.assignRole(assignRoleDto);
   }
 }

@@ -37,6 +37,40 @@ export interface RegisterResponse {
   user: any;
 }
 
+export interface CreateRoleRequest {
+  name: string;
+  description?: string;
+  clientId: string;
+}
+
+export interface CreateRoleResponse {
+  message: string;
+  role: {
+    id: string;
+    name: string;
+    description?: string;
+    composite: boolean;
+    clientRole: boolean;
+    containerId: string;
+  };
+}
+
+export interface AssignRoleRequest {
+  username: string;
+  roleName: string;
+  clientId: string;
+}
+
+export interface AssignRoleResponse {
+  message: string;
+  userId: string;
+  username: string;
+  role: {
+    name: string;
+    client: string;
+  };
+}
+
 export interface ApiError {
   statusCode: number;
   message: string;
@@ -73,6 +107,40 @@ class AuthApi {
     if (!response.ok) {
       const error: ApiError = await response.json();
       throw new Error(error.message || "Registration failed");
+    }
+
+    return response.json();
+  }
+
+  async createRole(data: CreateRoleRequest): Promise<CreateRoleResponse> {
+    const response = await fetch(`${API_BASE_URL}/keycloack/roles`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json();
+      throw new Error(error.message || "Failed to create role");
+    }
+
+    return response.json();
+  }
+
+  async assignRole(data: AssignRoleRequest): Promise<AssignRoleResponse> {
+    const response = await fetch(`${API_BASE_URL}/keycloack/roles/assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json();
+      throw new Error(error.message || "Failed to assign role");
     }
 
     return response.json();

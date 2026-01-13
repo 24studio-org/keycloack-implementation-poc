@@ -1,0 +1,311 @@
+{
+  "realm": "belmonte-demo",
+  "enabled": true,
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@belmonte.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin:manage-users",
+        "admin:manage-pricing",
+        "inventory:view",
+        "inventory:adjust",
+        "inventory:transfer",
+        "pos:sale",
+        "pos:return",
+        "pos:cash-drawer"
+      ]
+    },
+    {
+      "username": "cashier",
+      "enabled": true,
+      "firstName": "Cashier",
+      "lastName": "User",
+      "email": "cashier@belmonte.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cashier123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["pos:sale", "pos:return", "inventory:view"]
+    },
+    {
+      "username": "warehouse",
+      "enabled": true,
+      "firstName": "Warehouse",
+      "lastName": "Staff",
+      "email": "warehouse@belmonte.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "warehouse123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["inventory:view", "inventory:adjust", "inventory:transfer"]
+    },
+    {
+      "username": "customer",
+      "enabled": true,
+      "firstName": "Test",
+      "lastName": "Customer",
+      "email": "customer@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "customer123",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "inventory:view" },
+      { "name": "inventory:adjust" },
+      { "name": "inventory:transfer" },
+      { "name": "pos:sale" },
+      { "name": "pos:return" },
+      { "name": "pos:cash-drawer" },
+      { "name": "admin:manage-users" },
+      { "name": "admin:manage-pricing" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ecommerce-spa",
+      "name": "ecommerce-spa",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "https://app.example.com/callback",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": ["https://app.example.com", "http://localhost:3000"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
+        "api-service-audience",
+        "storefront"
+      ]
+    },
+    {
+      "clientId": "admin-spa",
+      "name": "admin-spa",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "https://admin.example.com/callback",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": ["https://admin.example.com", "http://localhost:5173"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
+        "api-service-audience",
+        "admin"
+      ],
+      "optionalClientScopes": ["pos", "inventory", "sales"]
+    },
+    {
+      "clientId": "api-service",
+      "name": "api-service",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "components": {},
+  "clientScopes": [
+    {
+      "name": "openid",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "given name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "firstName",
+            "claim.name": "given_name",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "family name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "lastName",
+            "claim.name": "family_name",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "jsonType.label": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "name": "api-service-audience",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "api-service-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "api-service",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "storefront",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "admin",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "pos",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "inventory",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "sales",
+      "protocol": "openid-connect"
+    }
+  ]
+}
